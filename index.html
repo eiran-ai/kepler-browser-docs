@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kepler Browser — Integration &amp; Configuration Documentation</title>
+  <style>
+    :root {
+      --navy: #092c44;
+      --blue: #0c4d73;
+      --green: #38ad66;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #475569;
+      --code-bg: #0f172a;
+      --code-fg: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    header {
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      color: #fff;
+      padding: 48px 24px 44px;
+    }
+    .container { max-width: 920px; margin: 0 auto; }
+    .logo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .pill {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(56, 173, 102, 0.2);
+      color: #86efac;
+      border: 1px solid rgba(56, 173, 102, 0.4);
+    }
+    h1 { font-size: 32px; letter-spacing: -0.02em; margin-bottom: 8px; }
+    header p { color: #cbd5e1; max-width: 660px; font-size: 15px; }
+    nav.toc {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    nav.toc .container {
+      display: flex;
+      gap: 24px;
+      padding: 12px 24px;
+      overflow-x: auto;
+    }
+    nav.toc a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    nav.toc a:hover { color: var(--blue); }
+    main { padding: 36px 24px 80px; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+    h2 { font-size: 20px; color: var(--navy); margin-bottom: 12px; }
+    h3 { font-size: 14px; color: var(--blue); margin: 18px 0 8px; }
+    p { font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+    ul { padding-left: 20px; margin-bottom: 12px; font-size: 14px; color: var(--muted); }
+    li { margin-bottom: 6px; }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-fg);
+      padding: 16px 18px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-size: 12.5px;
+      line-height: 1.55;
+      margin: 12px 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      background: #f1f5f9;
+      color: #0c4d73;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    th { font-weight: 700; color: var(--navy); background: #f8fafc; }
+    .note {
+      border-left: 4px solid var(--green);
+      background: #f0fdf4;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #166534;
+      margin: 14px 0;
+    }
+    footer { text-align: center; font-size: 12px; color: #94a3b8; padding-bottom: 40px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo-row">
+        <svg width="46" height="16" viewBox="0 0 400 134" fill="none" aria-hidden="true">
+          <path d="M 0 0 L 134 0 L 201 67 L 134 134 Z" fill="#67C2F5" />
+          <path d="M 267 0 L 400 0 L 301 99 L 336 134 L 134 134 Z" fill="#38AD66" />
+        </svg>
+        <span class="pill">Platform Integration Docs</span>
+      </div>
+      <h1>Kepler Browser Integration Guide</h1>
+      <p>
+        Official contract for Kepler College web systems (IGA, MIS, and future institutional platforms)
+        to detect Kepler Browser, trigger proctored exam lockdown, and distribute dynamic app policies.
+      </p>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="container">
+      <a href="#overview">Overview</a>
+      <a href="#js-api">JavaScript API</a>
+      <a href="#postmessage">postMessage Fallback</a>
+      <a href="#security-lifecycle">Exam Lifecycle</a>
+      <a href="#remote-config">Remote Config JSON</a>
+      <a href="#server-enforcement">Server Enforcement</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section id="overview">
+      <h2>1. Architecture Overview</h2>
+      <p>
+        <strong>Kepler Browser</strong> is a standalone Chromium-based desktop browser that students use daily.
+        Rather than coupling the browser to private LMS internals, <strong>the browser defines a clean, stable contract</strong>
+        that any authorized Kepler system can invoke:
+      </p>
+      <ul>
+        <li><strong>Normal Mode:</strong> Full multi-tab browsing, bookmarks, downloads, and SSO logins.</li>
+        <li><strong>Examination Mode:</strong> Safely stashes all open tabs in memory, enters fullscreen lockdown, blocks unauthorized navigation/shortcuts/clipboard/printing/downloads/DevTools, and restores all tabs on completion.</li>
+        <li><strong>Origin Authorization:</strong> Only origins configured with <code>canInitiateExam: true</code> in <a href="./config.json">config.json</a> can request Examination Mode.</li>
+      </ul>
+    </section>
+
+    <section id="js-api">
+      <h2>2. JavaScript Integration API (<code>window.keplerBrowser</code>)</h2>
+      <p>
+        Kepler Browser injects a read-only <code>window.keplerBrowser</code> object into the top-level frame (never into nested third-party iframes).
+      </p>
+
+      <h3>Detect Kepler Browser</h3>
+<pre><code>if (window.keplerBrowser?.isKeplerBrowser) {
+  console.log('Running inside Kepler Browser v' + window.keplerBrowser.version);
+}</code></pre>
+
+      <h3>Start a Proctored Examination</h3>
+      <p>
+        Calling <code>requestExamMode()</code> opens the browser's Pre-Exam Security Check modal. The Promise resolves once the student confirms and fullscreen lockdown is active, or rejects if cancelled/unauthorized.
+      </p>
+<pre><code>try {
+  const { sessionId } = await window.keplerBrowser.requestExamMode({
+    allowedDomains: ['*.igaafrica.com'],
+    examUrl: 'https://keplercollege.igaafrica.com/courses/3155/content/quiz/101/',
+    title: 'STAT-201 Midterm Examination',
+    durationMinutes: 60
+  });
+} catch (err) {
+  // Student cancelled security verification or origin is not authorized
+}</code></pre>
+
+      <h3>Check Active Exam Status</h3>
+<pre><code>const status = await window.keplerBrowser.getExamStatus();
+// { inExamMode: true, sessionId: '...', title: 'STAT-201 Midterm Examination' }</code></pre>
+
+      <h3>Complete Examination &amp; Release Lockdown</h3>
+      <p>
+        Call <code>completeExam()</code> from the locked examination page after the server confirms submission.
+        Only the active locked exam view on the authorized LMS origin is permitted to unlock the browser.
+      </p>
+<pre><code>await window.keplerBrowser.completeExam();</code></pre>
+    </section>
+
+    <section id="postmessage">
+      <h2>3. Declarative <code>window.postMessage</code> Protocol</h2>
+      <p>
+        Systems that prefer message passing can send same-origin top-frame messages using the <code>kepler:</code> prefix:
+      </p>
+<pre><code>// Request exam lockdown
+window.postMessage({
+  type: 'kepler:request-exam-mode',
+  payload: {
+    allowedDomains: ['*.igaafrica.com'],
+    examUrl: window.location.href,
+    title: 'Midterm Assessment'
+  }
+}, window.location.origin);
+
+// Signal exam completion
+window.postMessage({ type: 'kepler:exam-complete' }, window.location.origin);
+
+// Listen for browser responses
+window.addEventListener('message', (event) => {
+  if (event.origin !== window.location.origin) return;
+  if (event.data?.type === 'kepler:exam-mode-entered') { /* locked */ }
+  if (event.data?.type === 'kepler:exam-mode-exited')  { /* unlocked */ }
+  if (event.data?.type === 'kepler:error')             { /* handle error */ }
+});</code></pre>
+    </section>
+
+    <section id="security-lifecycle">
+      <h2>4. What Happens During Examination Mode</h2>
+      <table>
+        <thead>
+          <tr><th>Control</th><th>Behavior in Examination Mode</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tabs &amp; Address Bar</td><td>Hidden; existing student tabs are muted and safely stashed in memory until exam completion.</td></tr>
+          <tr><td>Fullscreen &amp; Focus</td><td>Fullscreen enforced; exiting fullscreen or switching apps triggers the Security Interruption screen.</td></tr>
+          <tr><td>Navigation &amp; Popups</td><td>Strict domain allowlist enforced silently on navigation, redirects, and <code>window.open()</code>.</td></tr>
+          <tr><td>Clipboard &amp; Printing</td><td>Clipboard cleared and blocked (shortcuts + DOM + <code>navigator.clipboard</code>); printing disabled.</td></tr>
+          <tr><td>Downloads &amp; DevTools</td><td>Session downloads blocked; DevTools disabled; context menu suppressed.</td></tr>
+          <tr><td>Native OS Lockdown</td><td>On macOS builds signed with Apple's Assessment entitlement, engages <code>AEAssessmentSession</code> automatically.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="remote-config">
+      <h2>5. Dynamic Remote Policy Config (<code>config.json</code>)</h2>
+      <p>
+        Kepler Browser can sync institutional applications and exam-authorized origins from a static HTTPS JSON file
+        without rebuilding the desktop app — no backend API required.
+      </p>
+      <div class="note">
+        Live public config endpoint alongside these docs: <code>./config.json</code>
+        — paste its HTTPS GitHub Pages URL into <code>kepler://settings</code> → <strong>Remote Policy Configuration</strong> (or set <code>KEPLER_CONFIG_URL</code>).
+      </div>
+<pre><code>{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-23T12:00:00Z",
+  "applications": [
+    {
+      "id": "iga",
+      "name": "Kepler IGA",
+      "url": "https://keplercollege.igaafrica.com/auth/dashboard/",
+      "enabled": true,
+      "pinned": true,
+      "securityProfile": "dynamic",
+      "allowedDomains": ["*.igaafrica.com"],
+      "canInitiateExam": true
+    }
+  ]
+}</code></pre>
+    </section>
+
+    <section id="server-enforcement">
+      <h2>6. Server-Side Approved Browser Enforcement</h2>
+      <p>
+        Client-side browser checks alone cannot stop a student from typing an IGA URL into Chrome or Firefox.
+        For high-stakes exams, institutional backends should pair Kepler Browser with:
+      </p>
+      <ul>
+        <li>Short-lived, signed assessment launch tokens tied to the authenticated student session.</li>
+        <li>Server-side validation of assessment lifecycle timestamps and interruption events.</li>
+        <li>Never relying solely on a custom HTTP <code>User-Agent</code> string as proof of lockdown.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    Kepler College • Kepler Browser Integration Specification
+  </footer>
+</body>
+</html>
